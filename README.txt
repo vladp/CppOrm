@@ -11,10 +11,341 @@ Installation:
 You will need cmake 2.6 or higher
 boost 1.38 or higher
 decNumber (see the readme file inside decNumber)
+OTL C++ library ( http://otl.sourceforge.net/) (a version is included in this repository, but later one can be used)
 
 run cmake-gui by specifying that the build
 to be 'build' and source directory to be 'trunk'
 
 for Windows, use Visual Studio 2008 (that's what I am initialy developing with)
+
+---- Here is an example of how this ORM can be used --- Start reading from the main function ----
+-- If you want to quickly look at the code, it is mostly one header file   otlorm1.h  --
+
+#include <iostream>
+#include <iterator>
+
+#include <boost/mem_fn.hpp>
+#include <boost/foreach.hpp>
+
+
+
+#include <otlorm/otlorm1.h>
+
+
+using namespace std;
+using namespace otlorm1;
+
+
+
+/* most magic will happen inside the macros here
+this will initialize the reflection system (which is
+several static maps per class type
+protected with mutex (so that an instance of the same class
+will not cause the maps to be reinitialized
+*/
+struct  tb_row
+   :public boost::enable_shared_from_this<tb_row>,
+   public cactiverow_t,
+   private boost::noncopyable
+{
+  //tb_otrq_prov
+  DECL_OTL_ROW_HPP(tb_row)
+    //
+    // for each field we do:
+    // define order, cpp field type, OTL field type (which is DB field type)
+    // field name (that is both a variable name for C++ and a field name for DB
+    // field length (non 0 for varchar
+    //
+  DECL_OTL_FIELD(1,OTL_BIGINT ,otl_var_bigint,otrq_prov_id,0)
+  DECL_OTL_FIELD(2, OTL_BIGINT, otl_var_bigint,clnt_dbid,0)  
+  DECL_OTL_FIELD(3,otl_datetime,orm_var_timestamp_tz,mydate,0)
+  DECL_OTL_FIELD(33,cmoney_t,orm_var_decimal,amount,0)
+
+  //define a field that is unique key
+  DECL_OTL_FIELD_UNIQUE_KEY1(otrq_prov_id)   
+};
+
+
+/* this does several things but most importantly
+ *  declares a static version of the Row type and that
+ *  causes all the machinery for reflection to get 
+ * initialized 
+ */
+DECL_OTL_ROW_CPP(tb_row)
+
+// a collection of rows is activetable which is
+// by default it is multiset, but you can pass in 
+// tb_row::tThisClassSet  or tb_row::tThisClassVector
+// as a second argument to template below
+typedef cactivetable_t<tb_row> tTEST_TB3;
+
+
+
+
+otl_connect db; // connect object
+
+
+
+// insert rows into table
+
+void insert()
+{
+   
+   //create a table of rows
+   tTEST_TB3 tb_tab;
+
+    for (size_t i=0; i<10; ++i)
+    {
+      tb_row::tThisClassSharedPtr pRow(new tb_row);
+
+      //active record function to assign random values to row
+      pRow->assign_randomval();      
+      tb_tab.insert(pRow);      
+    }
+
+    /*
+     * show off some operations provided automagically with active row   
+     */
+
+    BOOST_FOREACH( tb_row::tThisClassSharedPtr pRow, tb_tab )
+    {
+          /* assign null to all, this MODIFIES
+             the elments of the set so they become unordered !
+          */
+          pRow->assign_otlnull();
+    }
+
+    //or
+
+    for_each(tb_tab.begin(),tb_tab.end(),
+        boost::mem_fn(&cactiverow_t::assign_otlnull)
+    );
+
+
+
+    BOOST_FOREACH( tb_row::tThisClassSharedPtr pRow, tb_tab )
+    {
+          /* assign some random value to every field,
+             another built in function (just for testing)
+
+             this MODIFIES
+             the elments of the set so they become unordered !
+          */
+          pRow->assign_randomval();
+    }
+
+    stable_sort(tb_tab.begin(),tb_tab.end());   
+   
+   /*
+    *  Inserter is a class that is used to generate
+    *  strings to represent SQL statements for insert
+    *  it uses the reflection to introspect tb_row
+    */
+   cactiverow_inserter_all_t<tb_row> ins3("tb_test3");      
+   
+   try
+   {
+   
+     //standard OTL stream
+      otl_stream s3(11 /*bulk insert size */,
+                 ins3.get_db_str().c_str(), /* insert statement str*/
+               db);
+
+      /* now the insert */
+      BOOST_FOREACH( tb_row::tThisClassSharedPtr pRow, tb_tab )
+      {
+          s3<<*pRow;
+      }
+
+      s3.flush();
+      db.commit();
+   }
+   catch (otl_exception& e)
+   {
+      cout<<"ERROR "<<e.msg<<" "<<e.var_info<<endl;
+      db.rollback();
+      return;
+   }   
+   return;      
+}
+
+/* to be fixed -- update example needs work */
+void update(const int af1)
+// insert rows into table
+{
+ otl_stream
+   o(1, // buffer size
+     "UPDATE test_tab "
+     "   SET f2=:f2<char[31]> "
+     " WHERE f1=:f1<int>",
+        // UPDATE statement
+     db // connect object
+    );
+
+ //o<<"Name changed"<<af1;
+ #if defined (OTL_UNICODE)
+ o<<L"Name changed"<<af1;
+ #else
+ o<<"Name changed"<<af1;
+ #endif
+ 
+ o<<otl_null()<<af1+1; // set f2 to NULL
+
+}
+
+/* simplest use case
+Note that this function stays the same no matter
+how many fields are in the table (this was the goal --
+to make it so in the simple cases fields need to be typed
+only once in a declaration)
+*/
+void selectall (void)
+{
+   tb_row row;
+   cactivetable_t<tb_row> tb_tab;      
+   
+   otl_stream stream;
+   //shortcut to select all fields/all rows 
+   tb_tab.get_selectall_stream("tb_test3",stream,db);
+   //you can add 'where clause criteria here .... '
+   
+   //now read into the in memory table
+   //this is a shortcut
+   tb_tab.read_intothis(stream);
+   
+   //print it out (shows that the table and rows
+   //are compatible with some STL algorithms
+   //in this particular case the rows provide a 'nice print'
+   //to ostream class (or wostream)
+   copy (tb_tab.begin(),tb_tab.end(),
+   ostream_iterator<tb_row::tThisClassSharedPtr>(cout,"\n"));
+}
+
+
+void select(const int af1)
+{
+        cactive_criteria_t tbwhere;
+
+       // ^ means comma
+       // <fieldname>__bn means bind name of a field  (that is ::fldnm 
+       // to be use for binding 
+       //    
+       // <fieldname>__lf means local name of a field (basically a string name)
+       //
+       //
+
+      tbwhere=
+        // this would eventually create a string
+        /*
+          select otrq_prov_id,clnt_dbid,mydate\:\:varchar,amount\:\:varchar from tb_test3
+          where amount > 111.3333
+        */
+        //::<type> is a postgres idiom to do typecasting
+        //my ORM needs to do those tricks for all the databases
+        //
+        tb_row::amount__lf() > cmoney_t("111.3333") ;
+
+
+        //select all columns, and rows that fit the 'where'
+        // criteria
+        cactiverow_selector_all_t<tb_row> sel("tb_test3",tbwhere);
+//cout<<sel.get_db_str()<<endl;
+
+        //open up the typical otl stream
+        otl_stream s(50,
+              sel.get_db_str().c_str(),
+              db);  
+
+
+      //rewind means execute if nothing to be supplied
+      //into the select stream      
+      s.rewind();
+
+      tb_row r;
+      //this is typical how to iterate over OTL stream
+      while (!s.eof())
+      {
+        //read the row
+         s>>r;        
+
+         //print the whole row out
+         cout<<r<<endl;
+         
+         //or show how we can access individual field values
+         //with accessor methods
+         //basically we can just say
+         // <fieldname>__valc   or __val
+         //valc returns a const and __val returns non const ref
+
+         cout<<"amount field value is: "<<r.amount__valc()<<endl;
+
+      }  
+
+        return;
+}
+
+
+
+
+int main()
+{
+
+ otl_connect::otl_initialize(); // initialize ODBC environment
+ try{
+ 
+  //Make sure you have the ODBC data source below defined in your
+   //ODBC settings
+  db.rlogon("postgres/postgres@ana_prof_aa_aa"); 
+
+  otl_cursor::direct_exec
+   (
+    db,
+    "drop table tb_test3",
+    otl_exception::disabled // disable OTL exceptions
+   ); // drop table
+
+  otl_cursor::direct_exec
+   (
+    db,
+    (cactiverow_t::getscript_createtable<tb_row> ("tb_test3")).c_str()
+
+    /* above activrow  function produces something like:
+
+    "
+    DROP TABLE IF EXISTS tb_test3 cascade;
+    create table tb_test3("
+      "otrq_prov_id BIGINT,"
+      "clnt_dbid BIGINT,"  
+      "mydate timestamp,"
+      "amount DECIMAL(19,3)"
+      ")"
+
+     */
+
+    );  // create table
+
+
+  insert(); // insert records into the table
+//  update(10); // update records in the table
+  select(8); // select records from the table
+  
+  
+//  selectall();
+
+ }
+
+ catch(otl_exception& p){ // intercept OTL exceptions
+  cerr<<p.msg<<endl; // print out error message
+  cerr<<p.stm_text<<endl; // print out SQL that caused the error
+  cerr<<p.sqlstate<<endl; // print out SQLSTATE message
+  cerr<<p.var_info<<endl; // print out the variable that caused the error
+ }
+
+ db.logoff(); // disconnect from the database
+
+ return 0;
+
+}
+
 
 
