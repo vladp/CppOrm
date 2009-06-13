@@ -1,0 +1,9 @@
+
+
+Each file has license on top of it.
+Basically use it for whatever you want
+but please keep the names of author and 
+contributors on top of each file.
+Contributions, are of course, welcome.
+ORM author:  Vladislav Papayan
+

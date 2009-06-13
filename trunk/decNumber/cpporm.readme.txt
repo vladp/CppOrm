@@ -1,0 +1,14 @@
+
+vladislav papayan:
+
+copy the decNumber package (the 
+ICU license C-version
+from
+http://speleotrove.com/decimal/decnumber.html
+)
+
+into here
+merge (or do not override) decContext.h
+with your copy (there is only one include
+mystdint.h)
+
