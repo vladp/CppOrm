@@ -4,6 +4,10 @@
 
 #include <boost/mem_fn.hpp>
 #include <boost/foreach.hpp>
+//for serialization
+#include <boost/archive/tmpdir.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
 
 
 
@@ -37,7 +41,7 @@ struct  tb_row
   DECL_OTL_FIELD(1,OTL_BIGINT ,otl_var_bigint,otrq_prov_id,0)
   DECL_OTL_FIELD(2, OTL_BIGINT, otl_var_bigint,clnt_dbid,0)  
   DECL_OTL_FIELD(3,otl_datetime,orm_var_timestamp_tz,mydate,0)
-  DECL_OTL_FIELD(33,cmoney_t,orm_var_decimal,amount,0)
+  DECL_OTL_FIELD(4,cmoney_t,orm_var_decimal,amount,0)
 
   //define a field that is unique key
   DECL_OTL_FIELD_UNIQUE_KEY1(otrq_prov_id)   
@@ -50,6 +54,12 @@ struct  tb_row
  * initialized 
  */
 DECL_OTL_ROW_CPP(tb_row)
+
+
+
+BOOST_CLASS_EXPORT(tb_row)
+BOOST_SERIALIZATION_SHARED_PTR( tb_row )
+
 
 // a collection of rows is activetable which is
 // by default it is multiset, but you can pass in 
@@ -171,6 +181,49 @@ void update(const int af1)
 
 }
 
+
+void save_row( tb_row &r, const char * filename){
+    // make an archive
+    std::ofstream ofs(filename);
+    assert(ofs.good());
+    boost::archive::xml_oarchive oa(ofs);
+
+    r.serialize<boost::archive::xml_oarchive>(oa,0);
+
+    oa << BOOST_SERIALIZATION_NVP(r);
+
+
+
+    //serializeFrom__boost
+}
+
+
+void save_table(const tTEST_TB3::tThisClassParent &t, const char * filename)
+{
+    // make an archive
+    std::ofstream ofs(filename);
+    assert(ofs.good());
+    boost::archive::xml_oarchive oa(ofs);
+    
+    
+    oa << boost::serialization::make_nvp("MYTB", t);
+}
+
+
+void load_table (tTEST_TB3::tThisClassParent& t, const char * filename)
+{
+    // open the archive
+      std::ifstream ifs(filename);
+      assert(ifs.good());
+      boost::archive::xml_iarchive ia(ifs);
+
+    
+      ia >> boost::serialization::make_nvp("MYTB", t);
+}
+
+
+
+
 /* simplest use case
 Note that this function stays the same no matter
 how many fields are in the table (this was the goal --
@@ -240,14 +293,23 @@ void select(const int af1)
       s.rewind();
 
       tb_row r;
+      tTEST_TB3 tb_tab;
       //this is typical how to iterate over OTL stream
       while (!s.eof())
       {
         //read the row
-         s>>r;        
+        tb_row::tThisClassSharedPtr pRow(new tb_row);
+         s>>*pRow;        
+
+         /*add it to the in-memory table
+         we are using multiseet bydefault
+         so multiset has 'insert', if you parametrized the table
+         to be vector, the obviously, use push_back
+         */
+         tb_tab.insert(pRow);
 
          //print the whole row out
-         cout<<r<<endl;
+         cout<<*pRow<<endl;
          
          //or show how we can access individual field values
          //with accessor methods
@@ -255,9 +317,25 @@ void select(const int af1)
          // <fieldname>__valc   or __val
          //valc returns a const and __val returns non const ref
 
-         cout<<"amount field value is: "<<r.amount__valc()<<endl;
+         cout<<"amount field value is: "<<pRow->amount__valc()<<endl;
 
       }  
+
+      
+      cout<<"before save_table size is: "<<tb_tab.size()<<endl;
+       save_table(tb_tab, "vladik_ser_tb");
+
+       tb_tab.clear();
+       cout<<"cleared table "<<endl;
+       load_table(tb_tab, "vladik_ser_tb");
+       cout<<"after load table size is: "<<tb_tab.size()<<endl;
+       cout<<" now test out if the data is the same "<<endl;
+
+
+
+          copy (tb_tab.begin(),tb_tab.end(),
+   ostream_iterator<tb_row::tThisClassSharedPtr>(cout,"\n"));
+
 
         return;
 }

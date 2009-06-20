@@ -1,9 +1,166 @@
 CppORM
 
 CPP implementation of active record / ORM
-uses OTL for underlying database access.
-implements its own reflection
-supports UTF-8(extended ascii) and UTF-16 strings (via 2 byte wstring)
+author:  Vladislav Papayan   vpapayan @ gmai? . com
+contributors:  
+
+
+THIS IS WORK IN PROGRESS, no production system uses this library yet.
+
+It is free, use it anywhwere you want -- just please keep names of the author
+and contributors in the files. NO WARANTEE of course.
+
+
+
+FEATURES:
+------------------
+
+*Declare a database table as set of fields ONLY ONCE, and then automatically get
+Insert/Delete/Update  operations on tables/invidvidual rows
+For example once you declare something like
+
+struct  tb_row
+{
+  DECL_OTL_FIELD(1,OTL_BIGINT ,otl_var_bigint,otrq_prov_id,0)
+  DECL_OTL_FIELD(2, OTL_BIGINT, otl_var_bigint,clnt_dbid,0)  
+  DECL_OTL_FIELD(3,otl_datetime,orm_var_timestamp_tz,mydate,0)
+  DECL_OTL_FIELD(4,cmoney_t,orm_var_decimal,amount,0)
+
+/* second argument is either c or user defined data type, can be 
+int, string, long, double but I have declared csqlstring_t for example
+to automagically switch between unicode-16 and regular strings
+without changing code 
+The data type must satisfy two major properties:
+	* it can be streamed into otl_stream
+	* it can be streamed into boost Archive types
+*/
+
+};
+
+(see the example below for exact syntax)
+
+you will not need to mention the field names again unless you want to access
+the data.  That means that if you want to add another field to your table, you
+just modify the structure above, and that's it -- you do not have to through
+the rest of your code carefully searching for "amount"  strings
+
+If you remove a field from here, and it is used somewhere -- you will immediatelly
+get compile error (because all the fields are type-safe compile time structures and
+not just 'strings')
+
+Now
+tb_row  my_row  --  is the row
+
+cactivetable_t<tb_row> my_tb; --  is a table  of rows (by default it is std::multiset, but std::vector
+can be used too)
+
+
+
+*	Database SQL where clauses are modeled with C++ operators 
+&& - 'and'
+|| - 'or'
+^  - 'comma'
+etc
+
+*  Supports Serialization!  Finally declare once -- use everywhere in C++
+Using boost serialization library.  Therefore you can
+read the data from the database serialize it to disk, read it back from disk, and insert
+it into the database (see example below) using any of the boost serializers (xml, text, binary).
+
+You do not need to use 'database' to just use the serialization. However all the stuff is
+now comingled into one header file -- so database supports will need to be compiled in for now
+
+
+*  Uses OTL for Database independent database access
+
+*  Thread safe using boost mutex primitives (but very little locking is going on, 
+just to check one flag per class type)
+
+
+*  supports UTF-16 when OTL_UNICODE is defined,  otherwise we are 8 bit ascii clean -- meaning
+that reading UTF-8 data works without OTL_UNICODE with regular ascii database drivers
+
+
+* uses shared pointers (boost::shared_ptr) to store rows in table to avoid memory leaks and prevent
+excessive copying.
+
+* for each declared table you can use some convinience functions
+	* generate create table string at runtime
+ 	* assing random values to all the fields for a row
+	* assing nulls to all the fields for a row
+	* nice-print a row out to an ostream
+
+
+* supports tricky Database data types right out of the box
+	cmoney  -- or more generally NUMBER(19,6) or less for large number arithmetic
+	using IBM's decNum library
+	
+	BIGINT/BIGSERIAL -- using OTL's OTL_BIGING, dates using otl_datetime
+
+	wstring (UTF-16) as well regular strings
+
+*  Most important machinery that I developed is the reflection mechanism for C++
+	That's why all the above functionality is possible -- because I can introspect
+	a class instance at runtime mand find
+		all field names, their database field name equivalent, database type,
+		cpp type for every field, and many other things.
+
+
+	I tried to generate as many things at possible at compile time to avoid any
+	runtime penalties and to be as 'type-safe as possible.
+
+	However there is a runtime cost associated with introspecition.
+	I implemented by having 3 static maps for each Class Type (not instance)
+	They get initialized as part of static initialization and then used at
+	runtime.
+
+	When a new class instance gets created at runtime (say on the heap) - there is
+	a mutex lock that gets checked to see if the static maps exist, therefore 
+	this is not as fast as having no reflection...
+
+
+
+LIMITATIONS:
+	Well... this is work in progress.  I decided to publish it now to see ask
+	for comments and for help (if there is interest)
+
+	Right now it compiles with VS9, boost 1.38 and latest OTL database access libary
+	I am using to test Postgres Database with ODBC driver (both ascii for UTF-8 and unicode)
+
+	Basically any database that is supported by OTL should work, and any platform that is
+	supported by Boost.
+
+	But I have not compiled anywhere else (I just recently created the Cmake files (part
+	of this distribution) ) so that other platforms can be tested.
+
+	I am pretty sure other DB's will not work right a way for datetime and cmoney (Number (19,6)
+	data types -- because certain things are not SQL standard and I had to implement
+	typecats (for example ) for Postgres/ODBC combination.
+
+	There is no 'specific' support for BLOBs -- but OTL suports them so you can use them,
+	just do not put them as part of the table declaration (as I have not tested that yet...)
+
+	There are couple of things that will unlikely to be supported:
+		and that is Native postgres sql or Mysql drivers -- unless OTL supports them
+	See http://otl.sourceforge.net/	
+	
+
+
+--------------------------------
+HISTORY:
+
+06/20/09	vpapayan 	implemented serialization for activerow and activetable using boost
+
+
+
+
+
+
+
+
+
+---------------------------------
+
 
 
 Installation:
@@ -21,11 +178,16 @@ for Windows, use Visual Studio 2008 (that's what I am initialy developing with)
 ---- Here is an example of how this ORM can be used --- Start reading from the main function ----
 -- If you want to quickly look at the code, it is mostly one header file   otlorm1.h  --
 
+
 #include <iostream>
 #include <iterator>
 
 #include <boost/mem_fn.hpp>
 #include <boost/foreach.hpp>
+//for serialization
+#include <boost/archive/tmpdir.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
 
 
 
@@ -59,7 +221,7 @@ struct  tb_row
   DECL_OTL_FIELD(1,OTL_BIGINT ,otl_var_bigint,otrq_prov_id,0)
   DECL_OTL_FIELD(2, OTL_BIGINT, otl_var_bigint,clnt_dbid,0)  
   DECL_OTL_FIELD(3,otl_datetime,orm_var_timestamp_tz,mydate,0)
-  DECL_OTL_FIELD(33,cmoney_t,orm_var_decimal,amount,0)
+  DECL_OTL_FIELD(4,cmoney_t,orm_var_decimal,amount,0)
 
   //define a field that is unique key
   DECL_OTL_FIELD_UNIQUE_KEY1(otrq_prov_id)   
@@ -72,6 +234,12 @@ struct  tb_row
  * initialized 
  */
 DECL_OTL_ROW_CPP(tb_row)
+
+
+
+BOOST_CLASS_EXPORT(tb_row)
+BOOST_SERIALIZATION_SHARED_PTR( tb_row )
+
 
 // a collection of rows is activetable which is
 // by default it is multiset, but you can pass in 
@@ -193,6 +361,49 @@ void update(const int af1)
 
 }
 
+
+void save_row( tb_row &r, const char * filename){
+    // make an archive
+    std::ofstream ofs(filename);
+    assert(ofs.good());
+    boost::archive::xml_oarchive oa(ofs);
+
+    r.serialize<boost::archive::xml_oarchive>(oa,0);
+
+    oa << BOOST_SERIALIZATION_NVP(r);
+
+
+
+    //serializeFrom__boost
+}
+
+
+void save_table(const tTEST_TB3::tThisClassParent &t, const char * filename)
+{
+    // make an archive
+    std::ofstream ofs(filename);
+    assert(ofs.good());
+    boost::archive::xml_oarchive oa(ofs);
+    
+    
+    oa << boost::serialization::make_nvp("MYTB", t);
+}
+
+
+void load_table (tTEST_TB3::tThisClassParent& t, const char * filename)
+{
+    // open the archive
+      std::ifstream ifs(filename);
+      assert(ifs.good());
+      boost::archive::xml_iarchive ia(ifs);
+
+    
+      ia >> boost::serialization::make_nvp("MYTB", t);
+}
+
+
+
+
 /* simplest use case
 Note that this function stays the same no matter
 how many fields are in the table (this was the goal --
@@ -262,14 +473,23 @@ void select(const int af1)
       s.rewind();
 
       tb_row r;
+      tTEST_TB3 tb_tab;
       //this is typical how to iterate over OTL stream
       while (!s.eof())
       {
         //read the row
-         s>>r;        
+        tb_row::tThisClassSharedPtr pRow(new tb_row);
+         s>>*pRow;        
+
+         /*add it to the in-memory table
+         we are using multiseet bydefault
+         so multiset has 'insert', if you parametrized the table
+         to be vector, the obviously, use push_back
+         */
+         tb_tab.insert(pRow);
 
          //print the whole row out
-         cout<<r<<endl;
+         cout<<*pRow<<endl;
          
          //or show how we can access individual field values
          //with accessor methods
@@ -277,9 +497,25 @@ void select(const int af1)
          // <fieldname>__valc   or __val
          //valc returns a const and __val returns non const ref
 
-         cout<<"amount field value is: "<<r.amount__valc()<<endl;
+         cout<<"amount field value is: "<<pRow->amount__valc()<<endl;
 
       }  
+
+      
+      cout<<"before save_table size is: "<<tb_tab.size()<<endl;
+       save_table(tb_tab, "vladik_ser_tb");
+
+       tb_tab.clear();
+       cout<<"cleared table "<<endl;
+       load_table(tb_tab, "vladik_ser_tb");
+       cout<<"after load table size is: "<<tb_tab.size()<<endl;
+       cout<<" now test out if the data is the same "<<endl;
+
+
+
+          copy (tb_tab.begin(),tb_tab.end(),
+   ostream_iterator<tb_row::tThisClassSharedPtr>(cout,"\n"));
+
 
         return;
 }
@@ -346,6 +582,3 @@ int main()
  return 0;
 
 }
-
-
-

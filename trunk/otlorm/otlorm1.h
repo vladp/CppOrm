@@ -162,9 +162,19 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp> //add to stdafx.h
+#include <boost/serialization/export.hpp> //add to stdafx.h
+
+#include <boost/serialization/set.hpp> //add to stdafx.h
+#include <boost/serialization/vector.hpp> //add to stdafx.h
+#include <boost/serialization/list.hpp> //add to stdafx.h
+#include <boost/serialization/deque.hpp> //add to stdafx.h
+
+
+
+#include <boost/serialization/nvp.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
-
 
 
 
@@ -1619,7 +1629,8 @@ struct CFFunctorReceiveVal
 
    
    virtual
-   void receive_value(const tField& attrs, const std::type_info& tinfo, const otl_value<otl_datetime>& in)
+   void receive_value(const tField& attrs, const std::type_info& tinfo, 
+   const otl_value<otl_datetime>& in)
    =0;
 };
 
@@ -1691,7 +1702,8 @@ struct CFFunctorAssignVal
 
    
    virtual
-   void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, otl_value<otl_datetime>& in)
+   void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, 
+   otl_value<otl_datetime>& in)
    =0;
 };
 
@@ -1780,7 +1792,8 @@ struct CFFunctorRead__otlstream: public CFFunctorAssignVal
    
    
    virtual
-   void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, otl_value<otl_datetime>& in)
+   void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, 
+   otl_value<otl_datetime>& in)
    {  
       //should I use endr ?
       ref>>in;
@@ -1876,7 +1889,8 @@ struct CFFunctorWrite__otlstream: public CFFunctorReceiveVal
    
    
    virtual
-   void receive_value(const tField& /*attrs*/, const std::type_info& tinfo, const otl_value<otl_datetime>& in)
+   void receive_value(const tField& /*attrs*/, const std::type_info& tinfo, 
+   const otl_value<otl_datetime>& in)
    {  
       ref<<in;
    }
@@ -2006,7 +2020,8 @@ struct CFFunctorWrite__ostream: public CFFunctorReceiveVal
 
    
    virtual
-   void receive_value(const tField& attrs, const std::type_info& tinfo, const otl_value<otl_datetime>& in)
+   void receive_value(const tField& attrs, const std::type_info& tinfo, 
+   const otl_value<otl_datetime>& in)
    {  
       ref<<"["<<in<<"]"<<" defined as: ";
       showattr(attrs);
@@ -2168,7 +2183,8 @@ struct CFFunctorWrite__wostream: public CFFunctorReceiveVal
 
    
    virtual
-   void receive_value(const tField& attrs, const std::type_info& tinfo, const otl_value<otl_datetime>& in)
+   void receive_value(const tField& attrs, const std::type_info& tinfo, 
+   const otl_value<otl_datetime>& in)
    {  
       ref<<L"["<<in<<L"]"<<L" defined as: ";
       showattr(attrs);
@@ -2229,6 +2245,7 @@ struct CFFunctorSet__to_randomval: public CFFunctorAssignVal
      void getvalue(const tField& attrs, const std::type_info& tinfo, otl_value<std::string>& in)
    {  
       assign_random_val(in);
+      in.set_non_null();
    }
 #ifdef OTL_UNICODE      
    virtual
@@ -2248,6 +2265,7 @@ struct CFFunctorSet__to_randomval: public CFFunctorAssignVal
      otl_value<cmoney_t>& in)
    {  
       assign_random_val(in);
+      in.set_non_null();
    }
 #endif
 
@@ -2258,18 +2276,21 @@ struct CFFunctorSet__to_randomval: public CFFunctorAssignVal
      void getvalue(const tField& /*attrs*/, const std::type_info& /*tinfo*/, otl_value<float>& in)
    {  
       assign_random_val(in);
+      in.set_non_null();
    }
    
    virtual
      void getvalue(const tField& /*attrs*/, const std::type_info& /*tinfo*/, otl_value<double>& in)
    {  
       assign_random_val(in);
+      in.set_non_null();
    }
    
    virtual
      void getvalue(const tField& /*attrs*/, const std::type_info& /*tinfo*/, otl_value<OTL_BIGINT>& in)
    {     
       assign_random_val(in);
+      in.set_non_null();
    }
    
    
@@ -2277,13 +2298,16 @@ struct CFFunctorSet__to_randomval: public CFFunctorAssignVal
      void getvalue(const tField& /*attrs*/, const std::type_info& /*tinfo*/, otl_value<long>& in)
    {     
       assign_random_val(in);
+      in.set_non_null();
    }
 
    
    virtual
-     void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, otl_value<otl_datetime>& in)
+     void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, 
+     otl_value<otl_datetime>& in)
    {  
       assign_random_val(in);
+      in.set_non_null();
    }
 
 };
@@ -2376,11 +2400,229 @@ struct CFFunctorSet__to_otlnull: public CFFunctorAssignVal
 
    
    virtual
-     void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, otl_value<otl_datetime>& in)
+     void getvalue(const tField& /*attrs*/, const std::type_info& tinfo, 
+     otl_value<otl_datetime>& in)
    {  
       in=ref;
    }
 };
+
+
+
+#ifdef USE_BOOST_SERIALIZE
+//This functor is for serilazing row into file
+//using Boost serialize
+
+
+
+
+//field level functors start with CF
+/* serialize From archive, in the functions
+   here the field references will get values assigned to them
+
+   For serialize this is the only functor  because it does both
+   /save and load /  so if you want to rows/tables to be serialized
+   they cannot be 'const'
+*/
+template <typename Archive>
+struct CFFunctorSerializeFrom__boost: public CFFunctorAssignVal
+{
+   Archive& ref; 
+   CFFunctorSerializeFrom__boost (Archive& ar,const unsigned int version=0)      
+      :ref(ar)
+   {}   
+   
+   virtual ~CFFunctorSerializeFrom__boost(){}
+   
+
+   virtual
+   boost::any getvalue(const tField& attrs, const std::type_info& tinfo)
+   {
+      assert(0);
+      //can only be used if 
+      // OTLEXPR1_USE_ANYTYPE_ONLY
+      
+      /* based on the type info passed in, guess
+         what boost::any_cast<WHATTYPE>  
+         to be used this is at runtime
+         then apply that cast, extract value from
+         the any, and then call the appropriate
+         methods below
+      */
+
+        boost::any ret;
+      return ret;
+         
+   }
+   
+   virtual
+   void getvalue(const tField& attrs, 
+                     const std::type_info& /*tinfo*/, 
+                     otl_value<std::string>& in)
+   {  
+     ref &boost::serialization:: make_nvp(attrs.fname().c_str(), in.v);
+     if (Archive::is_loading::value)
+     {
+       //set to not null only when loading
+      in.set_non_null();
+     }
+   }
+
+#ifdef OTL_UNICODE      
+   virtual
+   void getvalue(const tField& attrs, 
+                     const std::type_info& /*tinfo*/, 
+                     otl_value<std::wstring>& in)
+   { 
+     ref & boost::serialization::make_nvp(attrs.fname().c_str(), in.v);
+
+     if (Archive::is_loading::value)
+     {
+      in.set_non_null();
+     }
+   }
+
+#endif   
+
+
+
+#ifdef ORM_HAS_CMONEY
+   virtual
+   void getvalue(const tField& attrs, 
+                     const std::type_info& /*tinfo*/, 
+                     otl_value<cmoney_t>& in)
+   {  
+     if (Archive::is_loading::value)
+     {
+        std::string tmp;
+        ref & boost::serialization::make_nvp(attrs.fname().c_str(), tmp);
+        in.v.from_str(tmp);
+        in.set_non_null();
+     }
+     else
+     {
+#ifdef OTL_UNICODE
+        std::wstring tmp(in.v.as_wstr());
+#else
+        std::string tmp(in.v.as_str());
+#endif
+        ref & boost::serialization::make_nvp(attrs.fname().c_str(), tmp);
+     }
+
+   }
+
+#endif   
+
+
+   
+   
+   virtual
+   void getvalue(const tField& attrs, 
+                     const std::type_info& /*tinfo*/, 
+                     otl_value<float>& in)
+   {  
+    ref & boost::serialization::make_nvp(attrs.fname().c_str(), in.v);
+    if (Archive::is_loading::value)
+    {
+      in.set_non_null();
+    }
+   }
+   
+   virtual
+   void getvalue(const tField& attrs, const std::type_info& /*tinfo*/, 
+                 otl_value<double>& in)
+   {  
+      ref & boost::serialization::make_nvp(attrs.fname().c_str(), in.v);
+      if (Archive::is_loading::value)
+      {
+        in.set_non_null();
+      }
+   }
+   
+   virtual
+   void getvalue(const tField& attrs, const std::type_info& /*tinfo*/,
+                  otl_value<OTL_BIGINT>& in)
+   {  
+      ref & boost::serialization::make_nvp(attrs.fname().c_str(), in.v);
+      if (Archive::is_loading::value)
+      {
+        in.set_non_null();
+      }
+   }
+
+
+   virtual
+   void getvalue(const tField& attrs, const std::type_info& /*tinfo*/,
+                  otl_value<long>& in)
+   {  
+      ref & boost::serialization::make_nvp(attrs.fname().c_str(), in.v);
+      if (Archive::is_loading::value)
+      {
+        in.set_non_null();
+      }
+   }
+
+   
+   virtual
+   void getvalue(const tField& attrs, const std::type_info& tinfo, 
+                  otl_value<otl_datetime>& in)
+   {
+    if (Archive::is_loading::value)
+    {
+//#ifdef OTL_UNICODE
+  //    std::wstring tmp;
+//#else
+      std::string tmp;
+//#endif
+      //read the value from the archive
+      ref & boost::serialization::make_nvp(attrs.fname().c_str(), tmp);
+      //now assign it to the in.v
+     
+      OTL_ODBC_STRING_TO_TIMESTAMP(tmp.c_str(),in.v)
+      in.set_non_null();
+    }
+    else
+    {
+      //OTL_ODBC_TIMESTAMP_TO_STRING(tm,str) 
+
+      char buf[256];
+      OTL_ODBC_TIMESTAMP_TO_STRING(in.v,buf) 
+      
+      ref & boost::serialization::make_nvp(attrs.fname().c_str(),
+      std::string(buf));
+    }
+
+   }//end of function
+   
+
+};//end of CFFunctorSerializeFrom__boost
+
+
+
+
+
+
+
+#endif //USE_BOOST_SERIALIZE
+
+
+
+
+
+
+
+
+
+
+// --- END OF FUNCTORS ----
+
+
+
+
+
+
+
+
 
 
 
@@ -2637,9 +2879,33 @@ struct cactiverow_t: public boost::enable_shared_from_this<cactiverow_t>
     void assign_randomval (void);
     void assign_randomval_somefields (const std::vector<std::string>& fields);
 
+#if defined(USE_BOOST_SERIALIZE)
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int version);
+
+    /*
+    template <typename Archive>
+    void serializeFrom__boost(Archive& ar, const unsigned int version);
+    */
+#endif
 
 
-                                       
+#if defined(USE_s11n_SERIALIZE)
+    //not working yet just a stub
+    template <typename Archive>
+    void serializeTo__s11n(Archive& ar, const unsigned int version);
+
+    template <typename Archive>
+    void serializeFrom__s11n(Archive& ar, const unsigned int version);
+#endif
+
+
+   
+
+
    //from stream to row
    friend otl_stream& operator>>(otl_stream& s, cactiverow_t& row);
    friend otl_stream& operator>>(otl_stream& s, cactiverow_t* row);
@@ -2656,6 +2922,8 @@ struct cactiverow_t: public boost::enable_shared_from_this<cactiverow_t>
    //from row to stream
    friend std::wostream& operator<<(std::wostream& s, const cactiverow_t& row);   
    friend std::wostream& operator<<(std::wostream& s, const cactiverow_t* prow);
+
+
 
 
    
@@ -3117,7 +3385,7 @@ inline
    void 
    cactiverow_t::assign_randomval_somefields (const std::vector<std::string>& names)
    {
-      /* note that in fucntion of Any_Row we use the vritual version
+      /* note that in function of Any_Row we use the virtual version
       of get_map_fields, not the static version
       */
       CFFunctorSet__to_randomval makerandom;
@@ -3128,9 +3396,37 @@ inline
                               makerandom);
    }
 
+#if defined(USE_BOOST_SERIALIZE)
+
+    template <typename Archive>
+    inline
+    void 
+    cactiverow_t::serialize(Archive& ar, const unsigned int version)
+    {
+      /* note that in function of Any_Row we use the virtual version
+      of get_map_fields, not the static version
+      */
+      CFFunctorSerializeFrom__boost<Archive> functor_serializeFrom(ar,version);
+      tOrderedFields fields=      
+        cactiverow_t::get_ordered_fields (get_map_fields(),*this);
+      write_values_to_fields (fields,
+                              *this,
+                              functor_serializeFrom);
 
 
+    }
 
+/*
+    template <typename Archive>
+    inline
+    void 
+    cactiverow_t::serializeFrom__boost(Archive& ar, const unsigned int version)
+    {
+
+    }
+*/
+
+#endif //USE_BOOST_SERIALIZE
 
 
 
@@ -3768,11 +4064,14 @@ ccriteria_local_field_t fld_nm##__lf(const std::string& tbnm="")\
   
 
 
-///generate a type of a field within row class
-#define T_FLD(fld_nm) tAttrType__##fld_nm
-
 /// generate a type of a field for a given row
-#define T_CFLD(class_nm,fld_nm) class_nm##::##tAttrType__##fld_nm
+#define T_FLD(class_nm,fld_nm) class_nm##::##tAttrType__##fld_nm
+
+//generate a C++ value type given class and field
+#define T_VALT(class_nm,fld_nm) class_nm##::##tAttrType__##fld_nm::tValTyp
+
+
+
 
 #define DECL_OTL_FIELD_UNIQUE_KEY1(fld_nm1) \
 typedef tAttrType__##fld_nm1  unique_t ;\
@@ -5539,6 +5838,8 @@ struct cactivetable_t: public TContainer,
 
    typedef typename TContainer::iterator  tThisClassIterator;
    typedef typename TContainer::const_iterator  tThisClassConstIterator;
+
+   typedef typename TContainer  tThisClassParent;
    
    cactivetable_t (void)      
    {      
@@ -5622,7 +5923,6 @@ struct cactivetable_t: public TContainer,
    
    }
 
-
    
    
    ///get the sequence generated id after typically an insert
@@ -5632,9 +5932,11 @@ struct cactivetable_t: public TContainer,
          
                        otl_conn& conn)
    {
+     assert(0);//this is db specific and for pg I just use
+     //select from sequence
    }                       
 
-};
+};//end of cactivetable_t
 
 
 //Short form of some of the classes
