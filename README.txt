@@ -7,7 +7,7 @@ contributors:
 
 THIS IS WORK IN PROGRESS, no production system uses this library yet.
 
-It is free, use it anywhwere you want -- just please keep names of the author
+It is free, use it anywhere you want -- just please keep names of the author
 and contributors in the files. NO WARANTEE of course.
 
 
@@ -16,7 +16,7 @@ FEATURES:
 ------------------
 
 *Declare a database table as set of fields ONLY ONCE, and then automatically get
-Insert/Delete/Update  operations on tables/invidvidual rows
+Insert/Delete/Update  operations on tables/individual rows
 For example once you declare something like
 
 struct  tb_row
@@ -44,7 +44,7 @@ the data.  That means that if you want to add another field to your table, you
 just modify the structure above, and that's it -- you do not have to through
 the rest of your code carefully searching for "amount"  strings
 
-If you remove a field from here, and it is used somewhere -- you will immediatelly
+If you remove a field from here, and it is used somewhere -- you will immediately
 get compile error (because all the fields are type-safe compile time structures and
 not just 'strings')
 
@@ -68,7 +68,7 @@ read the data from the database serialize it to disk, read it back from disk, an
 it into the database (see example below) using any of the boost serializers (xml, text, binary).
 
 You do not need to use 'database' to just use the serialization. However all the stuff is
-now comingled into one header file -- so database supports will need to be compiled in for now
+now commingled into one header file -- so database supports will need to be compiled in for now
 
 
 *  Uses OTL for Database independent database access
@@ -84,10 +84,10 @@ that reading UTF-8 data works without OTL_UNICODE with regular ascii database dr
 * uses shared pointers (boost::shared_ptr) to store rows in table to avoid memory leaks and prevent
 excessive copying.
 
-* for each declared table you can use some convinience functions
+* for each declared table you can use some convenience functions
 	* generate create table string at runtime
- 	* assing random values to all the fields for a row
-	* assing nulls to all the fields for a row
+ 	* assign random values to all the fields for a row
+	* assign nulls to all the fields for a row
 	* nice-print a row out to an ostream
 
 
@@ -101,7 +101,7 @@ excessive copying.
 
 *  Most important machinery that I developed is the reflection mechanism for C++
 	That's why all the above functionality is possible -- because I can introspect
-	a class instance at runtime mand find
+	a class instance at runtime and find
 		all field names, their database field name equivalent, database type,
 		cpp type for every field, and many other things.
 
@@ -109,7 +109,7 @@ excessive copying.
 	I tried to generate as many things at possible at compile time to avoid any
 	runtime penalties and to be as 'type-safe as possible.
 
-	However there is a runtime cost associated with introspecition.
+	However there is a runtime cost associated with introspection.
 	I implemented by having 3 static maps for each Class Type (not instance)
 	They get initialized as part of static initialization and then used at
 	runtime.
@@ -135,14 +135,16 @@ LIMITATIONS:
 
 	I am pretty sure other DB's will not work right a way for datetime and cmoney (Number (19,6)
 	data types -- because certain things are not SQL standard and I had to implement
-	typecats (for example ) for Postgres/ODBC combination.
+	typecasts (for example ) for Postgres/ODBC combination.
 
 	There is no 'specific' support for BLOBs -- but OTL suports them so you can use them,
 	just do not put them as part of the table declaration (as I have not tested that yet...)
 
 	There are couple of things that will unlikely to be supported:
 		and that is Native postgres sql or Mysql drivers -- unless OTL supports them
-	See http://otl.sourceforge.net/	
+	See http://otl.sourceforge.net/
+
+	The notion of reflection of inheritance hierarchy is not supported.  In other words you cannot have class B in inherit from class A and then use the ORM on B.	I think partial solutions to this can be implemented, but this is not extremely easy.
 	
 
 
