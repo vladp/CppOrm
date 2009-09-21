@@ -103,7 +103,11 @@ is being compiled as 'C' (not c++) )
 		#endif
 	#endif
 
-#endif // _MSC_VER
+#else // _MSC_VER
+	#define ORM_COMMON_API
+#endif
+
+
 
 // http://predef.sourceforge.net/prearch.html#sec6
 
@@ -113,9 +117,13 @@ is being compiled as 'C' (not c++) )
       #define ORM_CPU_ARCH_NM x86
 //      #pragma NOTE(MY COMPILE DETECTED CPU x86)
 #elif defined(__sparc__) || defined(__sparcv9)
-      #undef ORM_IS_x86  x86
+      #undef ORM_IS_x86  
       #define ORM_CPU_ARCH_NUM 90
       #define ORM_CPU_ARCH_NM v90
+#elif defined(__x86_64__) || defined(__x86_64) || defined(_M_X64)
+	#undef ORM_IS_x86
+	#define ORM_CPU_ARCH_NUM 64
+	#define ORM_CPU_ARCH_NM x86_64		
 #else
 #pragma NOTE(MY COMPILE DID NOT DETECT CPU)
    #error cannot figure out CPU type

@@ -26,7 +26,7 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF8toUTF16(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
-				throw std::exception("La falla!");
+			  throw std::runtime_error(std::string("La falla!"));
 			}
 			*targetstart = 0;
 			return resultstring;
@@ -42,14 +42,14 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF8toUTF32(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
-				throw std::exception("La falla!");
+				throw std::runtime_error("La falla!");
 			}
 			*targetstart = 0;
 			return resultstring;
 		}
 		else
 		{
-			throw std::exception("La falla!");
+			throw std::runtime_error("La falla!");
 		}
 		return L"";
 	}
@@ -71,7 +71,7 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF16toUTF8(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
-				throw std::exception("La falla!");
+				throw std::runtime_error("La falla!");
 			}
 			*targetstart = 0;
 			return resultstring;
@@ -88,14 +88,14 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF32toUTF8(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
-				throw std::exception("toUtf8 failed!");
+				throw std::runtime_error("toUtf8 failed!");
 			}
 			*targetstart = 0;
 			return resultstring;
 		}
 		else
 		{
-			throw std::exception("toUtf8 failed!");
+			throw std::runtime_error("toUtf8 failed!");
 		}
 		return "";
 	}
