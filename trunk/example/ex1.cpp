@@ -125,7 +125,13 @@ void insert()
           pRow->assign_randomval();
     }
 
-    stable_sort(tb_tab.begin(),tb_tab.end());   
+    
+#ifdef __CYGWIN__
+    //sort(tb_tab.begin(),tb_tab.end());   
+#else
+    stable_sort(tb_tab.begin(),tb_tab.end());      
+#endif
+    
    
    /*
     *  Inserter is a class that is used to generate

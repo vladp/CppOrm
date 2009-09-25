@@ -777,20 +777,20 @@ const char* orm_db_type_name (const int ftype,const int len=0)
    {
       case otl_var_bigint:
                {
-                  static char* res="bigint";
+                  const char* res="bigint";
                   return res;
                }
                break;
       case otl_var_int:
                {
-                  static char* res="int";
+                  const char* res="int";
                   return res;               
                }             
                break;
                        
       default:
                {
-                  static char* res="orm_unknown_db_type_name";
+                  const char* res="orm_unknown_db_type_name";
                   return res;
                
                }               
@@ -2580,10 +2580,11 @@ struct CFFunctorSerializeFrom__boost: public CFFunctorAssignVal
       //OTL_ODBC_TIMESTAMP_TO_STRING(tm,str) 
 
       char buf[256];
-      OTL_ODBC_TIMESTAMP_TO_STRING(in.v,buf) 
-      
+      OTL_ODBC_TIMESTAMP_TO_STRING(in.v,buf) ;
+	
+      std::string tmp(buf);
       ref & boost::serialization::make_nvp(attrs.fname().c_str(),
-      std::string(buf));
+					   tmp);
     }
 
    }//end of function
@@ -3963,19 +3964,19 @@ static char *fld_nm##__nm (void) \
 template <typename TInst> \
 static otl_value<cpp_typ>& get_fld_ref__##fld_nm (TInst& inst) \
 { \
-   return inst.##fld_nm ; \
+   return inst.fld_nm ; \
 } \
 \
 /* return const cpp value */\
 const cpp_typ & fld_nm##__valc (void) const\
 { \
-   return fld_nm##.v ; \
+   return fld_nm.v ; \
 } \
 \
 /*return non cost cpp value reference*/\
 cpp_typ & fld_nm##__val (void)\
 { \
-   return fld_nm##.v ; \
+   return fld_nm.v ; \
 } \
 \
 \
@@ -3983,7 +3984,7 @@ cpp_typ & fld_nm##__val (void)\
 template <typename TInst> \
 static const otl_value<cpp_typ>& get_fld_ref__##fld_nm (const TInst& inst)\
 { \
-   return inst.##fld_nm ; \
+   return inst.fld_nm ; \
 } \
 \
 \
@@ -3992,14 +3993,14 @@ static const otl_value<cpp_typ>& get_fld_ref__##fld_nm (const TInst& inst)\
 static void set_field_fromfunctor__##fld_nm (cactiverow_t& row, CFFunctorAssignVal& f) \
 {\
    tThisClass& r(dynamic_cast<tThisClass&>(row));\
-   f.operator()<tAttrType__##fld_nm>(r.##fld_nm);\
+   f.operator()<tAttrType__##fld_nm>(r.fld_nm);\
 }\
 \
 \
 static void give_field_tofunctor__##fld_nm (const cactiverow_t& row, CFFunctorReceiveVal& f) \
 {\
    const tThisClass& r(dynamic_cast<const tThisClass&>(row));\
-   f.operator()<const tAttrType__##fld_nm>(r.##fld_nm);\
+   f.operator()<const tAttrType__##fld_nm>(r.fld_nm);\
 }\
 /* now typedef the field type so that it can be used*/\
 /*when the user of the class knows exactly a field name*/\
@@ -4063,10 +4064,10 @@ ccriteria_local_field_t fld_nm##__lf(const std::string& tbnm="")\
 
 
 /// generate a type of a field for a given row
-#define T_FLD(class_nm,fld_nm) class_nm##::##tAttrType__##fld_nm
+#define T_FLD(class_nm,fld_nm) class_nm::tAttrType__##fld_nm
 
 //generate a C++ value type given class and field
-#define T_VALT(class_nm,fld_nm) class_nm##::##tAttrType__##fld_nm::tValTyp
+#define T_VALT(class_nm,fld_nm) class_nm::tAttrType__##fld_nm::tValTyp
 
 
 
@@ -4082,32 +4083,32 @@ const unique_t& get_unique_key1(void) const\
 \
 bool operator<(const tThisClass& in) const\
 {\
-   return fld_nm1 < in.##fld_nm1;\
+   return fld_nm1 < in.fld_nm1;\
 }
 
 
 //put this into your cpp file
 #define DECL_OTL_ROW_CPP(classnm) \
-   boost::mutex classnm##::static_members_mutex;\
-   long long classnm##::init_flag=0LL;\
-   classnm##::tName2Fields classnm##::m_field_map;\
-   classnm##::tMFset__field classnm##::m_functorset_field_map;\
-   classnm##::tMFget__field classnm##::m_functorget_field_map;\
+   boost::mutex classnm::static_members_mutex;\
+   long long classnm::init_flag=0LL;\
+   classnm::tName2Fields classnm::m_field_map;\
+   classnm::tMFset__field classnm::m_functorset_field_map;\
+   classnm::tMFget__field classnm::m_functorget_field_map;\
    \
    /*class constructor */\
-   classnm##::##classnm (const bool isStatic)\
+   classnm::classnm (const bool isStatic)\
    {\
       /*now announce to the world that we have initialized the row*/\
       /*this is critical to happen during static initialization stage*/\
       /*when we are in constructor all fields have been created statically*/\
       if (isStatic)\
       {\
-         cactiverow_t::init_flag_set_ok_Fields(classnm##::init_flag);\
-         cactiverow_t::init_flag_set_ok_Setters(classnm##::init_flag);\
-         cactiverow_t::init_flag_set_ok_Getters(classnm##::init_flag);\
+         cactiverow_t::init_flag_set_ok_Fields(classnm::init_flag);\
+         cactiverow_t::init_flag_set_ok_Setters(classnm::init_flag);\
+         cactiverow_t::init_flag_set_ok_Getters(classnm::init_flag);\
       }\
    }\
-   ##classnm##::~##classnm (void)\
+   classnm::~classnm (void)\
    {\
       /*std::cout<<#classnm<<" destructor"<<std::endl;*/\
       /*std::cout<<#classnm<<" set map size was: "<<m_functorset_field_map.size()<<std::endl;*/\
@@ -4131,7 +4132,7 @@ bool operator<(const tThisClass& in) const\
       typedef boost::shared_ptr< classnm > tThisClassSharedPtr;\
       /* constructor/destructor */\
       classnm (bool isStatic=false);\
-      ~##classnm (void);\
+      ~classnm (void);\
       struct classnm##__lessthan \
       {\
          bool operator () (const tThisClassSharedPtr a, \
@@ -4212,7 +4213,7 @@ bool operator<(const tThisClass& in) const\
       boost::mutex::scoped_lock mylock(static_members_mutex);\
       cactiverow_t::tOrderedFields res;\
       cactiverow_t::tName2FieldsConstIter it;\
-      const cactiverow_t::tName2Fields& field_map(classnm##::get_map_fields_static());\
+      const cactiverow_t::tName2Fields& field_map(classnm::get_map_fields_static());\
       for (it=field_map.begin();it!=field_map.end();++it)\
       {\
          res.insert(it->second);\
