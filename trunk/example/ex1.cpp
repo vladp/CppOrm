@@ -1,4 +1,7 @@
-
+//if fstream is not included ofstream has errors
+//because it is somehow gets confused between widechar
+//and char
+#include <fstream>
 #include <iostream>
 #include <iterator>
 
@@ -182,7 +185,7 @@ void update(const int af1)
 }
 
 
-void save_row( tb_row &r, const char * filename){
+void save_row( tb_row &r, char const * filename){
     // make an archive
     std::ofstream ofs(filename);
     assert(ofs.good());

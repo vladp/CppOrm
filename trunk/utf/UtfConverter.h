@@ -3,9 +3,30 @@
 
 #include "ConvertUTF.h"
 
+#if defined (__CYGWIN__)
+/* i am not including boost here, therefore if was not included before mimic its macro
+  that shows that wstring is not defined
+*/
+#ifndef  BOOST_NO_STD_WSTRING
+#define  BOOST_NO_STD_WSTRING
+#endif
+#endif
+
+
+
+
+
+
+
 // http://www.codeproject.com/KB/string/UtfConverter.aspx
 namespace UtfConverter
 {
+
+
+
+
+
+#ifndef BOOST_NO_STD_WSTRING
     std::wstring FromUtf8(const std::string& utf8string);
     std::string ToUtf8(const std::wstring& widestring);
 
@@ -99,6 +120,8 @@ namespace UtfConverter
 		}
 		return "";
 	}
+
+#endif //BOOST_NO_STD_WSTRING
 };
 
 

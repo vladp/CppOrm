@@ -73,25 +73,10 @@
 
 
 
-//this must be
-//be included before winsock2
-#include <boost/asio.hpp>
-
-
-#if defined _MSC_VER
-   #include <winsock2.h>
-   #include <windows.h>
-#endif
 
 
 //#define BOOST_BIND_ENABLE_CDECL 1
 //#define BOOST_MEM_FN_ENABLE_CDECL 1
-
-//this cannot be included in stdafx
-//because depending on what library I build
-//I changed some of the pound defines there
-//#include <setrak_config.hpp>
-
 
 
 #include <strstream>
@@ -140,10 +125,9 @@
 #include <boost/cstdint.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
-#include <boost/tokenizer.hpp>
 
-//I use it to get process id
-#include <boost/interprocess/managed_shared_memory.hpp>
+
+
 
 
 #include <boost/any.hpp>
@@ -587,13 +571,14 @@ void orm_exec (otl_stream& s)
 
 
 
-
+#ifndef BOOST_NO_STD_WSTRING
 
 
 //otl does not provide operator that allows
 //to print otl_datetime to wostream
 //so we will just copy the version OTL has
 //and make it support wostream 
+
 inline STD_NAMESPACE_PREFIX wostream& operator<<(
  STD_NAMESPACE_PREFIX wostream& s, 
  const otl_value<otl_datetime>& var)
@@ -643,7 +628,7 @@ inline STD_NAMESPACE_PREFIX ostream& operator<<(
  return s;
 }
 
-
+#endif // BOOST_NO_STD_WSTRING
 
 
 
@@ -733,9 +718,12 @@ otl_stream& operator << (otl_stream& s, const otl_value<cmoney_t>& m)
 template <typename Archive>
 struct functor_serialize_otl_val
 {
-functor_serialize_otl_val (Archive& ar )
-:ref_ar(ar)
-{}
+  Archive& ref_s;
+
+  functor_serialize_otl_val (Archive& ar )
+  :ref_s(ar)
+  {
+  }
 
    void operator () (otl_value<float>& in)
    {
@@ -2052,6 +2040,8 @@ struct CFFunctorWrite__ostream: public CFFunctorReceiveVal
 };
 
 
+#ifndef BOOST_NO_STD_WSTRING
+
 //Wostream version
 struct CFFunctorWrite__wostream: public CFFunctorReceiveVal
 {
@@ -2213,7 +2203,11 @@ struct CFFunctorWrite__wostream: public CFFunctorReceiveVal
       ref<<L" /* ORDER: "<<attrs.forder()<<L" */";
    }
 
-};
+}; //end of wostream version
+
+#endif // !BOOST_NO_STD_WSTRING
+
+
 
 
 struct CFFunctorSet__to_randomval: public CFFunctorAssignVal
@@ -2918,11 +2912,11 @@ struct cactiverow_t: public boost::enable_shared_from_this<cactiverow_t>
    friend std::ostream& operator<<(std::ostream& s, const cactiverow_t& row);   
    friend std::ostream& operator<<(std::ostream& s, const cactiverow_t* prow);
    
-
+#ifndef BOOST_NO_STD_WSTRING
    //from row to stream
    friend std::wostream& operator<<(std::wostream& s, const cactiverow_t& row);   
    friend std::wostream& operator<<(std::wostream& s, const cactiverow_t* prow);
-
+#endif
 
 
 
@@ -2933,8 +2927,8 @@ struct cactiverow_t: public boost::enable_shared_from_this<cactiverow_t>
   std::string
   inline cactiverow_t::getscript_createtable (const std::string& tbname)
   {
-      TRow::tName2Fields map=TRow::get_map_fields_static ();  
-      TRow::tName2FieldsConstIter it;
+      typename TRow::tName2Fields map=TRow::get_map_fields_static ();  
+      typename TRow::tName2FieldsConstIter it;
       std::string result;
       
       result="create table "+tbname;
@@ -3500,6 +3494,7 @@ inline
    }
 
 
+#ifndef BOOST_NO_STD_WSTRING
    //from row to Wstream
    inline
    std::wostream& 
@@ -3521,6 +3516,9 @@ inline
       s<<*prow;
       return s;
    }
+
+#endif // !BOOST_NO_STD_WSTRING
+
 
 /// Assign any cactive_field to any criteria
 //via this Proxy mechanism
@@ -4386,17 +4384,17 @@ struct cactivefield_t: public otl_value<T>,
 #if defined (BOOST_SERIALIZATION_SERIALIZATION_HPP)
    boost::archive::detail::basic_oarchive& 
       operator& (boost::archive::detail::basic_oarchive& ar)
-   {
-      ar & v;
-      return ar;
-   }
+     {
+       ar & otl_value<T>::v;
+       return ar;
+     }
    
    boost::archive::detail::basic_oarchive& 
-    fromself (boost::archive::detail::basic_oarchive& ar) const
-   {
-      ar&v;
-      return ar;
-   }
+     fromself (boost::archive::detail::basic_oarchive& ar) const
+     {
+       ar& otl_value<T>::v;
+       return ar;
+     }
    
 #endif   
          
@@ -4451,7 +4449,7 @@ struct cactivefield_t: public otl_value<T>,
    {
       //if null or 'default' it ceretainly not 'less than'
       //anything
-      if (is_null ())
+      if (otl_value<T>::is_null ())
       {
          return false;
       }
@@ -4467,7 +4465,7 @@ struct cactivefield_t: public otl_value<T>,
    
    bool operator < (const otl_value<T>& in) const
    {
-      if (is_null() || is_default()) return false;
+      if (otl_value<T>::is_null() || is_default()) return false;
    
       return this->v < in.v;
    }
@@ -4475,7 +4473,7 @@ struct cactivefield_t: public otl_value<T>,
    //this operator is probably not necessary
    bool operator < (const T& in) const
    {
-      if (is_null() || is_default()) return false;
+      if (this->is_null() || this->is_default()) return false;
       return this->v < in;
    }
    
@@ -4488,21 +4486,21 @@ struct cactivefield_t: public otl_value<T>,
    //comparasing
    bool operator== (tThisClass& in) const
    {
-      if (  (is_null()== true && in.is_null()==true) ||
-               (is_default()==true && in.is_default()==true)
+      if (  (this->is_null()== true && in.is_null()==true) ||
+               (this->is_default()==true && in.is_default()==true)
           )
       {
          return true;
       }          
       
-      if (  (is_null()==true)  && (in.is_null()==false) )
+      if (  (this->is_null()==true)  && (in.is_null()==false) )
       {
          return false;
       }
       
       
       
-      if (  (is_default()==true)  && (in.is_default()==false) )
+      if (  (this->is_default()==true)  && (in.is_default()==false) )
       {
          return false;
       }
@@ -4588,13 +4586,13 @@ struct cactivefield_t: public otl_value<T>,
    void set_default (void)
    {
       m_default=true;
-      otl_value::set_non_null();
+      otl_value<T>::set_non_null();
    }
    
    void set_null (void)
    {
       m_default=false;
-      otl_value::set_null();
+      otl_value<T>::set_null();
    }
    
    bool is_default( void) const
@@ -5839,7 +5837,7 @@ struct cactivetable_t: public TContainer,
    typedef typename TContainer::iterator  tThisClassIterator;
    typedef typename TContainer::const_iterator  tThisClassConstIterator;
 
-   typedef typename TContainer  tThisClassParent;
+   typedef TContainer  tThisClassParent;
    
    cactivetable_t (void)      
    {      

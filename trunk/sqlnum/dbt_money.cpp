@@ -109,12 +109,13 @@ cmoney_t::cmoney_t (const std::string& in)
    this->from_str(in);
 }
     
+#ifndef BOOST_NO_STD_WSTRING
 cmoney_t::cmoney_t (const std::wstring& in)
    :v(new cmoney_impl_dtl)
 {
    this->from_wstr(in);
 }
-    
+#endif
     
 cmoney_t::cmoney_t(const cmoney_t::t_money_storage& in)
    :v(new cmoney_impl_dtl)
@@ -167,7 +168,7 @@ cmoney_t::as_str (void) const
 
 
 
-
+#ifndef BOOST_NO_STD_WSTRING
 std::wstring
 cmoney_t::as_wstr (void) const
 {
@@ -215,7 +216,8 @@ cmoney_t::as_wstr (void) const
 return std::wstring(wData);   
 
 }
-    
+
+#endif // wstring    
 
 void  
 cmoney_t::from_str (const std::string& in)
@@ -226,6 +228,7 @@ cmoney_t::from_str (const std::string& in)
    decQuadFromString( &v->impl,in.c_str(),&set);   
 }
    
+#ifndef BOOST_NO_STD_WSTRING
 void  
 cmoney_t::from_wstr (const std::wstring& in)
 {
@@ -265,7 +268,7 @@ int WideCharToMultiByte(
    
 }
 
-
+#endif //wstring
 
         
 

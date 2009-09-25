@@ -1,7 +1,9 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-include_directories("${CMAKE_SOURCE_DIR}/cmake/orm.cmake")
+include_directories("${CMAKE_SOURCE_DIR}/decNumber"  "/usr")
+
+
 
 set(decNumber_SRC
 decContext.c 
@@ -24,6 +26,8 @@ decNumberLocal.h
 decNumber.h 
 decPacked.h 
 decQuad.h 
-decSingle.h)
+decSingle.h
+ms_stdint.h
+)
 
 ADD_LIBRARY (decNumber STATIC ${decNumber_SRC} ${decNumber_HEADER})

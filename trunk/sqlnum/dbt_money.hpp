@@ -71,7 +71,10 @@ public:
     cmoney_t (void);
     cmoney_t (const int& in);
     cmoney_t (const std::string& in);    
-    cmoney_t (const std::wstring& in);        
+#ifndef BOOST_NO_STD_WSTRING
+    cmoney_t (const std::wstring& in);  
+#endif 
+     
     cmoney_t (const t_money_storage& in);    
     cmoney_t (const cmoney_t& in);
     
@@ -94,10 +97,14 @@ public:
     
     
     std::string as_str (void) const;
+#ifndef BOOST_NO_STD_WSTRING
     std::wstring as_wstr (void) const;
+#endif
 
     void  from_str (const std::string& );
+#ifndef BOOST_NO_STD_WSTRING
     void  from_wstr (const std::wstring&);
+#endif
 
 
     
@@ -110,12 +117,14 @@ public:
     }
     
     //friend functions need to be inline
+#ifndef BOOST_NO_STD_WSTRING
     friend
     std::wostream& operator<<(std::wostream& o,const cmoney_t& m)
     {
       o<<m.as_wstr();
       return o;
     }
+#endif
         
       
 
@@ -131,6 +140,7 @@ public:
       return o;
     }
     
+#ifndef BOOST_NO_STD_WSTRING
     //friend functions need to be inline
     friend
     std::wistream& operator>>(std::wistream& o, cmoney_t& m)
@@ -143,6 +153,7 @@ public:
       }  
       return o;
     }
+#endif
 
 
 

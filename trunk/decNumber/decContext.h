@@ -41,14 +41,13 @@
   #define DECCFULLNAME "Decimal Context Descriptor"   /* Verbose name */
   #define DECCAUTHOR   "Mike Cowlishaw"               /* Who to blame */
 
-  #if !defined(int32_t)
-  //#include <boost/cstdint.hpp>
-  #include "mystdint.h"
-  //using namespace boost;
-    //#include <stdint.h>            /* C99 standard integers           */
-  #endif
-  #include <stdio.h>               /* for printf, etc.                */
-  #include <signal.h>              /* for traps                       */
+#if !defined(int32_t) && !defined(_MSC_VER)
+#include <stdint.h>            /* C99 standard integers           */
+#else
+#include "ms_stdint.h" /* vsp include the local stdint */
+#endif
+#include <stdio.h>               /* for printf, etc.                */
+#include <signal.h>              /* for traps                       */
 
   /* Extended flags setting -- set this to 0 to use only IEEE flags   */
   #if !defined(DECEXTFLAG)
