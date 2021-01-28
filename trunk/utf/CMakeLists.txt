@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.4...3.19)
 
-cmake_minimum_required(VERSION 2.6)
 
 set(utf_SRC 
 ConvertUTF.c)
@@ -9,4 +9,6 @@ set(utf_HEADER
 ConvertUTF.h 
 utfconverter.h)
 
-ADD_LIBRARY (utf STATIC ${utf_SRC} ${utf_HEADER})
+add_library (utf STATIC ${utf_SRC} ${utf_HEADER})
+# All users of this library will need at least C++11
+target_compile_features(utf PUBLIC cxx_std_11)

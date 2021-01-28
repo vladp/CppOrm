@@ -29,9 +29,9 @@ protected with mutex (so that an instance of the same class
 will not cause the maps to be reinitialized
 */
 struct  tb_row
-   :public boost::enable_shared_from_this<tb_row>,
-   public cactiverow_t,
-   private boost::noncopyable
+   // :public boost::enable_shared_from_this<tb_row>, //FIXME cactiverow_t already enables shared_ptr
+   :public cactiverow_t,
+	private boost::noncopyable
 {
   //tb_otrq_prov
   DECL_OTL_ROW_HPP(tb_row)
@@ -44,8 +44,9 @@ struct  tb_row
   DECL_OTL_FIELD(1,OTL_BIGINT ,otl_var_bigint,otrq_prov_id,0)
   DECL_OTL_FIELD(2, OTL_BIGINT, otl_var_bigint,clnt_dbid,0)  
   DECL_OTL_FIELD(3,otl_datetime,orm_var_timestamp_tz,mydate,0)
+#if defined (ORM_HAS_DECNUM)
   DECL_OTL_FIELD(4,cmoney_t,orm_var_decimal,amount,0)
-
+#endif
   //define a field that is unique key
   DECL_OTL_FIELD_UNIQUE_KEY1(otrq_prov_id)   
 };
@@ -126,11 +127,17 @@ void insert()
     }
 
     
-#ifdef __CYGWIN__
-    //sort(tb_tab.begin(),tb_tab.end());   
-#else
-    stable_sort(tb_tab.begin(),tb_tab.end());      
-#endif
+	//meaningless, since tb_tab is a multiset and it is already sorted
+	// std::stable_sort(tb_tab.begin(), tb_tab.end(), tb_row::tThisClassOpLessThan());
+
+    /* another example, but this time using lambda
+    std::stable_sort(tb_tab.begin(), tb_tab.end(), 
+        [](const tb_row::tThisClassSharedPtr& p1, const tb_row::tThisClassSharedPtr& p2)
+        {
+            return (*p1) < (*p2);
+        }
+        );
+     */
     
    
    /*
@@ -274,18 +281,20 @@ void select(const int af1)
        //
        //
 
-      tbwhere=
-        // this would eventually create a string
-        /*
-          select otrq_prov_id,clnt_dbid,mydate\:\:varchar,amount\:\:varchar from tb_test3
-          where amount > 111.3333
-        */
-        //::<type> is a postgres idiom to do typecasting
-        //my ORM needs to do those tricks for all the databases
-        //
-        tb_row::amount__lf() > cmoney_t("111.3333") ;
-
-
+        tbwhere =
+            // this would eventually create a string
+            /*
+              select otrq_prov_id,clnt_dbid,mydate\:\:varchar,amount\:\:varchar from tb_test3
+              where amount > 111.3333
+            */
+            //::<type> is a postgres idiom to do typecasting
+            //my ORM needs to do those tricks for all the databases
+            //
+#if defined (ORM_HAS_DECNUM)
+            tb_row::amount__lf() > cmoney_t("111.3333");
+#else
+            tb_row::clnt_dbid__lf() > 6;
+#endif
         //select all columns, and rows that fit the 'where'
         // criteria
         cactiverow_selector_all_t<tb_row> sel("tb_test3",tbwhere);
@@ -326,7 +335,9 @@ void select(const int af1)
          // <fieldname>__valc   or __val
          //valc returns a const and __val returns non const ref
 
+#if defined (ORM_HAS_DECNUM)
          cout<<"amount field value is: "<<pRow->amount__valc()<<endl;
+#endif
 
       }  
 

@@ -4120,8 +4120,9 @@ bool operator<(const tThisClass& in) const\
    
  
    
-//put this into your headerfile
-//inside the row def
+//put this inside your class definition for a Row class
+//, as a FIRST line
+// It creates constructors, destructor, important typedefs and so on
 #define DECL_OTL_ROW_HPP(classnm) \
       static boost::mutex static_members_mutex;\
       /*initialization bit vector to tell me what static regi */\
@@ -4135,19 +4136,22 @@ bool operator<(const tThisClass& in) const\
       ~classnm (void);\
       struct classnm##__lessthan \
       {\
-         bool operator () (const tThisClassSharedPtr a, \
-               const tThisClassSharedPtr b) \
+         bool operator () (const tThisClassSharedPtr& a, \
+               const tThisClassSharedPtr& b) const \
          {\
             return (*a)<(*b);\
          }\
       };\
-      typedef std::set<tThisClassSharedPtr,classnm##__lessthan> tThisClassSet;\
-      typedef std::set<tThisClassSharedPtr,classnm##__lessthan>::const_iterator tThisClassSetConstIter;\
-      typedef std::set<tThisClassSharedPtr,classnm##__lessthan>::iterator tThisClassSetIter;\
       \
-      typedef std::multiset<tThisClassSharedPtr,classnm##__lessthan> tThisClassMSet;\
-      typedef std::multiset<tThisClassSharedPtr,classnm##__lessthan>::const_iterator tThisClassMSetConstIter;\
-      typedef std::multiset<tThisClassSharedPtr,classnm##__lessthan>::iterator tThisClassMSetIter;\
+      typedef classnm##__lessthan tThisClassOpLessThan;\
+      \
+      typedef std::set<tThisClassSharedPtr,tThisClassOpLessThan> tThisClassSet;\
+      typedef std::set<tThisClassSharedPtr,tThisClassOpLessThan>::const_iterator tThisClassSetConstIter;\
+      typedef std::set<tThisClassSharedPtr,tThisClassOpLessThan>::iterator tThisClassSetIter;\
+      \
+      typedef std::multiset<tThisClassSharedPtr,tThisClassOpLessThan> tThisClassMSet;\
+      typedef std::multiset<tThisClassSharedPtr,tThisClassOpLessThan>::const_iterator tThisClassMSetConstIter;\
+      typedef std::multiset<tThisClassSharedPtr,tThisClassOpLessThan>::iterator tThisClassMSetIter;\
       \
       typedef std::vector<tThisClassSharedPtr> tThisClassVector;\
       typedef std::vector<tThisClassSharedPtr>::const_iterator tThisClassVectorConstIter;\
@@ -4377,6 +4381,7 @@ struct cactivefield_t: public otl_value<T>,
    >   tThisClass;
    
    typedef boost::shared_ptr<tThisClass> tThisClassSharedPtr;
+   typedef boost::shared_ptr<const tThisClass> tThisClassSharedConstPtr;
    typedef std::set<tThisClassSharedPtr> tThisClassSet;
    typedef std::vector<tThisClassSharedPtr> tThisClassVector;
    typedef std::map<std::string,tThisClassSharedPtr> tThisClassStrMap;
@@ -5844,8 +5849,6 @@ struct cactivetable_t: public TContainer,
    {      
    }
    
-
-
    
    void read_intothis (otl_stream& stream)
    {

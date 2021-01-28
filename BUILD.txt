@@ -1,0 +1,9 @@
+## Windows 10 Common
+set BOOST_ROOT to point to a root dir of precompiled boost
+starting from root of the source tree
+md build
+cd build
+### Windows 10 MS C++    with precompiled boost libs (set BOOST_ROOT) with v141 toolset
+cmake -G "Visual Studio 16 2019" -A x64 -T v141 ..\trunk
+### Windows 10 Clang C++
+cmake -G "Visual Studio 16 2019" -A x64 -T ClangCL ..\trunk
