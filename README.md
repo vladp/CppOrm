@@ -110,9 +110,9 @@ excessive copying.
 	* dates using otl_datetime (date + timezone)
 	* wstring (UTF-16) as well regular strings
 
-*  Most important machinery that was developed that enabled all these, is the reflection mechanism for C++
+*  Bespoke implementation of  reflection mechanism for C++
 	That's why all the above functionality is possible -- because we can introspect
-	a class instance at runtime and find: all field names, their database field name equivalent, database type, cpp type for every field, and many other things.
+	a class instance at runtime and find: all field names, their database field name equivalent, database type, cpp type for every field, and many other things. The reflection maps are populated during static initialization time.  The code for various get/set functions is generated at compile time using macros and templates. At run time, when we get/set data via database access library, we interrogate the maps to see what function should be applied to handle a specific field.
 
 
 This library  tries to generate as many things at possible at compile time to avoid any
