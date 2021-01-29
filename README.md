@@ -132,7 +132,7 @@ excessive copying.
 
 
 
-LIMITATIONS:
+## LIMITATIONS:
 	Well... this is work in progress.  I decided to publish it now to see ask
 	for comments and for help (if there is interest)
 
