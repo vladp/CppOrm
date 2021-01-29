@@ -106,7 +106,8 @@ excessive copying.
 * supports tricky Database data types right out of the box
 	* cmoney  -- or more generally NUMBER(19,6) or less for large number arithmetic
 	using IBM's [decNumber](https://github.com/SDL-Hercules-390/decNumber) library
-	* BIGINT/BIGSERIAL -- using OTL's OTL_BIGING, dates using otl_datetime
+	* BIGINT/BIGSERIAL -- using OTL's OTL_BIGING,
+	* dates using otl_datetime (date + timezone)
 	* wstring (UTF-16) as well regular strings
 
 *  Most important machinery that was developed that enabled all these, is the reflection mechanism for C++
@@ -127,8 +128,7 @@ a mutex lock that gets checked to see if the static maps exist, therefore this i
 
 
 ## Limitations:
-	Well... this is work in progress.  I decided to publish it now to see ask
-	for comments and for help (if there is interest)
+	Well... this is work in progress
 
 	Right now it compiles with Visual Studio 16 2019 toolset v141, boost 1.75 and latest OTL database access libary
 	I am using to test Postgres Database with [ODBC driver](https://www.postgresql.org/ftp/odbc/versions/msi/) (both ascii for UTF-8 and unicode)
