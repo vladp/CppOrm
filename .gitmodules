@@ -1,3 +1,0 @@
-[submodule "trunk/decNumber"]
-	path = trunk/decNumber
-	url = https://github.com/SDL-Hercules-390/decNumber.git
