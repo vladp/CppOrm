@@ -11,14 +11,14 @@ and contributors in the files. NO WARRANTEE, of course.
 2. Map a database table into C++ structure
 3. Can mix in database fields and transient fields (that are not represented in the database)
 4. Has an implementation of BigDecimal / (money) class to work with large amounts without loosing precision
-5. Store/Load a select result into a file using boost:archive (XML and other formats are supported)
+5. Store/Load data into/from a file using boost:archive (XML and binary formats are supported)
 6. Unicode via wstring
 7. DDL such as table create
 8. Prepared SQL and Array operations are supported
-9. Prettyprint for the data in memory;
+9. Pretty-print for the data in memory;
 
 ## Future aspirations
-1. [OTL](http://otl.sourceforge.net/otl3_intro.htm) library supports a number of database, so adding support for those database to this ORM would be great
+1. [OTL](http://otl.sourceforge.net/otl3_intro.htm) library supports a number of databases, so adding support for those database to this ORM would be great
 2. Supporting, simultaneously a relatioshal database and a key-value store, for the use case of near-caches (where portion of the database is replicated in a local key-value store to facilitate faster access and to offload main database)
 3. Automated test suit, so that additional work can be quickly verified
 4. more compilers and OS combination
@@ -83,7 +83,7 @@ it into the database (see example below) using any of the boost serializers (xml
 You do not need to use 'database' to just use the serialization. However, all the stuff is
 now commingled into one header file -- so database supports will need to be compiled in for now
 
-* relies on well tested C++ [OTL](http://otl.sourceforge.net/otl3_intro.htm) library (developed and maintained by Sergey Kuchin for over 24 years)
+* relies on well tested C++ [OTL](http://otl.sourceforge.net) library (developed and maintained by Sergei Kuchin for over 24 years)
 
 
 *  Thread safe using boost mutex primitives (but very little locking is going on, 
@@ -99,7 +99,7 @@ excessive copying.
 	* generate create table string at runtime
  	* assign random values to all the fields for a row
 	* assign nulls to all the fields for a row
-	* nice-print a row out to an ostream
+	* pretty-print a row out to an ostream
 
 
 
@@ -160,6 +160,6 @@ a mutex lock that gets checked to see if the static maps exist, therefore this i
 * You will need cmake 3.5 or higher
 * boost 1.38 or higher
 * decNumber is included as a gitsubmodule in decNumber subdirectory, so it will need to be initialized as git submodule:    ` cd trunk/decNumber ` `git submodule init` `git submodule update`
-* [OTL C++ library]( http://otl.sourceforge.net/) (an old version is included in this repository, but later ones should work as well)
+* [OTL C++ library]( http://otl.sourceforge.net/) (a recent version is included in this repository, but later ones should work as well)
 * Read BUILD.txt on how to use cmake to generate Visual Studio project files
 Read example/ex1.cpp for basic usage, start with main function

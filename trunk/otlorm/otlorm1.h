@@ -210,6 +210,7 @@
 //cannot use OTL_STL and UNICODE
 #define OTL_ADD_NULL_TERMINATOR_TO_STRING_SIZE
 #define OTL_ODBC_POSTGRESQL
+using namespace std; //added for most recent version of OTL
 //new define for proper RPC (return rows count)
 #define OTL_ODBC_ALTERNATE_RPC 1
 //#define OTL_ODBC_SQL_EXTENDED_FETCH_ON 1
