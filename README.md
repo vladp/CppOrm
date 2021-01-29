@@ -165,7 +165,7 @@ excessive copying.
 
 * You will need cmake 3.5 or higher
 * boost 1.38 or higher
-* decNumber is included as a gitsubmodule in decNumber subdirectory, so it will need to be initialized as git submodule
+* decNumber is included as a gitsubmodule in decNumber subdirectory, so it will need to be initialized as git submodule:    ` cd trunk/decNumber ` `git submodule init` `git submodule update`
 * [OTL C++ library]( http://otl.sourceforge.net/) (an old version is included in this repository, but later ones should work as well)
 * Read BUILD.txt on how to use cmake to generate Visual Studio project files
 Read example/ex1.cpp for basic usage, start with main function
