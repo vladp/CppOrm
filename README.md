@@ -160,13 +160,6 @@ LIMITATIONS:
 	
 
 
-## HISTORY:
-
-06/20/09	vpapayan 	implemented serialization for activerow and activetable using boost
-01/28/21	vpapayan 	upgraded to work with C++, cmake, decnumber updates
-
-
-
 
 ## Installation:
 
