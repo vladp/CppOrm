@@ -104,31 +104,25 @@ excessive copying.
 
 
 * supports tricky Database data types right out of the box
-	cmoney  -- or more generally NUMBER(19,6) or less for large number arithmetic
-	using  [decNumber](https://github.com/SDL-Hercules-390/decNumber) library
-	
-	BIGINT/BIGSERIAL -- using OTL's OTL_BIGING, dates using otl_datetime
-
-	wstring (UTF-16) as well regular strings
+	* cmoney  -- or more generally NUMBER(19,6) or less for large number arithmetic
+	using IBM's [decNumber](https://github.com/SDL-Hercules-390/decNumber) library
+	* BIGINT/BIGSERIAL -- using OTL's OTL_BIGING, dates using otl_datetime
+	* wstring (UTF-16) as well regular strings
 
 *  Most important machinery that was developed that enabled all these, is the reflection mechanism for C++
-	That's why all the above functionality is possible -- because I can introspect
-	a class instance at runtime and find
-		all field names, their database field name equivalent, database type,
-		cpp type for every field, and many other things.
+	That's why all the above functionality is possible -- because we can introspect
+	a class instance at runtime and find: all field names, their database field name equivalent, database type, cpp type for every field, and many other things.
 
 
-	This library  tries to generate as many things at possible at compile time to avoid any
-	runtime penalties and to be as 'type-safe as possible.
+This library  tries to generate as many things at possible at compile time to avoid any
+runtime penalties and to be as 'type-safe as possible.
 
-	However there is a runtime cost associated with introspection.
-	The library implements it by having 3 static maps for each Class Type (not instance)
-	They get initialized as part of static initialization and then used at
-	runtime.
+However there is a runtime cost associated with introspection.
+The library implements it by having 3 static maps for each Class Type (not instance)
+They get initialized as part of static initialization and then used at runtime.
 
-	When a new class instance gets created at runtime (say on the heap) - there is
-	a mutex lock that gets checked to see if the static maps exist, therefore 
-	this is not as fast as having no reflection...
+When a new class instance gets created at runtime (say on the heap) - there is
+a mutex lock that gets checked to see if the static maps exist, therefore this is not as fast as having no reflection.
 
 
 
