@@ -62,8 +62,13 @@
 //to support money (decimal(19,6) for example)
 extern "C"
 {
+    /*
    #include <decNumber/decQuad.h>
    #include <decNumber/decimal64.c>
+   */
+#include "decQuad.h"
+//#include "decimal64.c"
+
 }
 
 
@@ -279,9 +284,8 @@ cmoney_t& cmoney_t::operator=(const cmoney_t& in)
    return *this;
 }
 
-bool 
-cmoney_t::operator<(const cmoney_t& in ) const
-{
+//bool operator<(const cmoney_t&) const;
+int cmoney_t::compareWith(const cmoney_t& in ) const{
   decContext set;
   decContextDefault(&set, DEC_INIT_DECQUAD); // initialize4.     
   decQuad result;
@@ -297,8 +301,6 @@ cmoney_t::operator<(const cmoney_t& in ) const
   {
    return false;
   }
- 
-   
 }
 
 

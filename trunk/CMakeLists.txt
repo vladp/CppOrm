@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_PLATFORM_INDEPENDENT_CODE ON)
 
 
-SET (ORM_HAS_DECNUM OFF)
+SET (ORM_HAS_DECNUM ON)
 
 message(STATUS "Found ROOT: ${ROOT_VERSION} at ${ROOT_DIR}")
 message(STATUS "Original flags: ${ROOT_CXX_FLAGS}")
@@ -18,6 +18,8 @@ message(STATUS "Original definitions: ${ROOT_DEFINITIONS}")
 message(STATUS "Original exe flags: ${ROOT_EXE_LINKER_FLAGS}")
 
 message(STATUS "Using DECNUM: ${ORM_HAS_DECNUM}")
+
+
 
 
 if(ORM_HAS_DECNUM)
@@ -69,6 +71,7 @@ list (APPEND myinclude_dirs ${cpporm_SOURCE_DIR}/utf )
 list (APPEND myinclude_dirs ${cpporm_SOURCE_DIR}/otl )
 if (ORM_HAS_DECNUM)
     list (APPEND myinclude_dirs ${cpporm_SOURCE_DIR}/sqlnum ) #if ORM_HAS_DECNUM is defined this dir must be included
+    list (APPEND myinclude_dirs ${cpporm_SOURCE_DIR}/decNumber/include ) 
 endif (ORM_HAS_DECNUM)
 
 INCLUDE_DIRECTORIES(${myinclude_dirs} )
@@ -77,6 +80,7 @@ INCLUDE_DIRECTORIES(${myinclude_dirs} )
 LINK_DIRECTORIES(${Project_BINARY_DIR}/lib ${Boost_LIBRARY_DIRS} )
 
 if (ORM_HAS_DECNUM)
+  set (FORCE_DECNUMBERLIB_NM decNumber)
   add_subdirectory (decNumber)
   add_subdirectory (utf)
   add_subdirectory (sqlnum)

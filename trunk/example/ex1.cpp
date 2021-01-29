@@ -348,7 +348,6 @@ int main() {
 		select(8); // select records from the table
 	    //  selectall();
 	}
-
 	catch (const otl_exception& p) { // intercept OTL exceptions
 		cerr << p.msg << endl; // print out error message
 		cerr << p.stm_text << endl; // print out SQL that caused the error
@@ -356,6 +355,18 @@ int main() {
 		cerr << p.var_info << endl; // print out the variable that caused the error
 	}
 
+	cmoney_t largesum1 = cmoney_t("99999999999999.22");
+	cmoney_t largesum2 = cmoney_t("88888888888888.22");
+	if (largesum1 < largesum2) {
+		cerr << "ERROR:  cmoney_t does not work correctly"<<endl;
+	}
+	else {
+		cout << "SUCCESS: cmoney_t works correctly" << endl;
+	}
+
+
+
 	db.logoff(); // disconnect from the database
 	return 0;
 }
+

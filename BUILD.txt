@@ -1,8 +1,9 @@
 ## Windows 10 Common
 set BOOST_ROOT to point to a root dir of precompiled boost
 starting from root of the source tree
-md build
-cd build
+create an out of source build directory (with something64.release format -- becase it is needed by decNumber)
+md build64.release
+cd build64.release
 ### Windows 10 MS C++    with precompiled boost libs (set BOOST_ROOT) with v141 toolset
 cmake -G "Visual Studio 16 2019" -A x64 -T v141 ..\trunk
 ### Windows 10 Clang C++
