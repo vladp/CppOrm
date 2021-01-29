@@ -158,23 +158,21 @@ LIMITATIONS:
 
 	The notion of reflection of inheritance hierarchy is not supported.  In other words you cannot have class B in inherit from class A and then use the ORM on B.	I think partial solutions to this can be implemented, but this is not extremely easy.
 	
----
 
-HISTORY:
+
+## HISTORY:
 
 06/20/09	vpapayan 	implemented serialization for activerow and activetable using boost
 01/28/21	vpapayan 	upgraded to work with C++, cmake, decnumber updates
 
----
 
 
-Installation:
 
-You will need cmake 3.5 or higher
-boost 1.38 or higher
-decNumber is included as a gitsubmodule
+## Installation:
 
-OTL C++ library ( http://otl.sourceforge.net/) (a version is included in this repository, but later one can be used)
-
-Read BUILD.txt on how to use cmake to generate Visual Studio project files
+* You will need cmake 3.5 or higher
+* boost 1.38 or higher
+* decNumber is included as a gitsubmodule in decNumber subdirectory, so it will need to be initialized as git submodule
+* OTL C++ library ( http://otl.sourceforge.net/) (a version is included in this repository, but later one can be used)
+* Read BUILD.txt on how to use cmake to generate Visual Studio project files
 Read example/ex1.cpp for basic usage, start with main function
