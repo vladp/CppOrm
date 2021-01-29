@@ -132,7 +132,7 @@ excessive copying.
 
 
 
-## LIMITATIONS:
+## Limitations:
 	Well... this is work in progress.  I decided to publish it now to see ask
 	for comments and for help (if there is interest)
 
@@ -166,6 +166,6 @@ excessive copying.
 * You will need cmake 3.5 or higher
 * boost 1.38 or higher
 * decNumber is included as a gitsubmodule in decNumber subdirectory, so it will need to be initialized as git submodule
-* OTL C++ library ( http://otl.sourceforge.net/) (a version is included in this repository, but later one can be used)
+* [OTL C++ library]( http://otl.sourceforge.net/) (an old version is included in this repository, but later ones should work as well)
 * Read BUILD.txt on how to use cmake to generate Visual Studio project files
 Read example/ex1.cpp for basic usage, start with main function
