@@ -1,0 +1,3 @@
+[submodule "trunk/decNumber"]
+	path = trunk/decNumber
+	url = https://github.com/vladp/decNumber.git
