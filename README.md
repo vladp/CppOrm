@@ -26,7 +26,7 @@ and contributors in the files. NO WARRANTEE, of course.
 6. leveraging new c++ features to remove the old 'cruft' that was used implement reflection
 
 ## Details:
-------------------
+
 
 Declare a database table as set of fields ONLY ONCE, and then automatically get
 Insert/Delete/Update  operations on tables/individual rows
@@ -50,7 +50,7 @@ The data type must satisfy two major properties:
 
 };
 
-(see the example below for exact syntax)
+(see the example/ex1)
 
 you will not need to mention the field names again unless you want to access
 the data.  That means that if you want to add another field to your table, you
@@ -75,12 +75,12 @@ can be used too)
 ^  - 'comma'
 etc
 
-*  Supports Serialization!  Finally declare once -- use everywhere in C++
-Using boost serialization library.  Therefore you can
+
+*  Supports Serialization! Using boost serialization library.  Therefore you can
 read the data from the database serialize it to disk, read it back from disk, and insert
 it into the database (see example below) using any of the boost serializers (xml, text, binary).
 
-You do not need to use 'database' to just use the serialization. However all the stuff is
+You do not need to use 'database' to just use the serialization. However, all the stuff is
 now commingled into one header file -- so database supports will need to be compiled in for now
 
 * relies on well tested C++ [OTL](http://otl.sourceforge.net/otl3_intro.htm) library (developed and maintained by Sergey Kuchin for over 24 years)
@@ -159,10 +159,12 @@ LIMITATIONS:
 	The notion of reflection of inheritance hierarchy is not supported.  In other words you cannot have class B in inherit from class A and then use the ORM on B.	I think partial solutions to this can be implemented, but this is not extremely easy.
 	
 ---
+
 HISTORY:
 
 06/20/09	vpapayan 	implemented serialization for activerow and activetable using boost
 01/28/21	vpapayan 	upgraded to work with C++, cmake, decnumber updates
+
 ---
 
 
