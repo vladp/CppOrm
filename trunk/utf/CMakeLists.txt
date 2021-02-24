@@ -7,7 +7,7 @@ ConvertUTF.c)
 
 set(utf_HEADER
 ConvertUTF.h 
-utfconverter.h)
+UtfConverter.h)
 
 add_library (utf STATIC ${utf_SRC} ${utf_HEADER})
 # All users of this library will need at least C++11
