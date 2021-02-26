@@ -219,8 +219,8 @@ using namespace std; //added for most recent version of OTL
 #define OTL_BIND_VAR_STRICT_TYPE_CHECKING_ON
 #define OTL_EXPLICIT_NAMESPACES
 #define OTL_ANSI_CPP
-#define OTL_UNCAUGHT_EXCEPTION_ON // enable safe exception handling / error 
-								  // recovery.
+#define OTL_UNCAUGHT_EXCEPTION_ON // enable safe exception handling / error  recovery.
+
 
 #if defined(__BORLANDC__)
 #define OTL_BIGINT __int64 // Enabling BC++ 64-bit integers

@@ -55,13 +55,18 @@ IF ( WIN32 )
     # BOOST_ROOT must point to the start of the boost directory
     SET ( Boost_Root    $ENV{BOOST_ROOT} )
 ELSE ( WIN32 )
+    add_definitions(-DOTL_IODBC_BSD=1)
 ENDIF ( WIN32 )
-  
+
+find_package(ODBC REQUIRED)
+message(STATUS "Using ODBC libraries: ${ODBC_LIBRARY}")
+
 #SET( Boost_ADDITIONAL_VERSIONS 1.38 1.38.0 )
 # search for Boost version x1.34
 
+# set(Boost_USE_STATIC_LIBS ON)
 SET (Boost_USE_MULTITHREADED 1)
-find_package( Boost  COMPONENTS regex thread)
+find_package( Boost  COMPONENTS regex thread serialization)
 
 set (myinclude_dirs)
 list (APPEND myinclude_dirs ${Boost_INCLUDE_DIRS} )
@@ -74,7 +79,7 @@ if (ORM_HAS_DECNUM)
     list (APPEND myinclude_dirs ${cpporm_SOURCE_DIR}/decNumber/include ) 
 endif (ORM_HAS_DECNUM)
 
-INCLUDE_DIRECTORIES(${myinclude_dirs} )
+INCLUDE_DIRECTORIES(${myinclude_dirs} ${ODBC_INCLUDE_DIRS} )
  
  
 LINK_DIRECTORIES(${Project_BINARY_DIR}/lib ${Boost_LIBRARY_DIRS} )

@@ -183,40 +183,12 @@ cmoney_t::as_wstr (void) const
  //this will take double the space 
  //or quadrupl the space on unix
    wchar_t wData[DECQUAD_String];
-
    
 #ifdef _WINDOWS   
-::MultiByteToWideChar(CP_UTF8, 0, strbuff2, -1, wData, DECQUAD_String);
+::MultiByteToWideChar
+    (CP_UTF8, 0, strbuff2, strlen(strbuff2), wData, DECQUAD_String);
 #else
-   assert(0);
-   iconv_t cd;
-   //cd = iconv_open ("WCHAR_T", charset);
-   cd = iconv_open("WCHAR_T", "UTF-8");   
-
-//"UTF-32" or "UTF-16"   
-   
-   if (cd == (iconv_t) -1)
-   {
-      /* Something went wrong.  */
-      if (errno == EINVAL)
-      {
-        error (0, 0, "conversion from '%s' to wchar_t not available",
-                    "UTF-8");
-      }                    
-      else
-      {
-         perror ("iconv_open");     
-        /* Terminate the output string.  */
-        //   *outbuf = L'\0';     
-        //     return -1;
-      }
-    }
-   
-    size_t  input_size=strlen(strbuff2);
-    size_t output_size=sizeof_(wchar_t)*DECQUAD_String;
-    iconv(cd,&strbuff2,&input_size,&wData,&output_size);
-    
-
+   std::mbstowcs(wData,strbuff2,strlen(strbuff2));
 #endif
 return std::wstring(wData);   
 
@@ -268,7 +240,7 @@ int WideCharToMultiByte(
 #else   
 
    assert(0);
-   std::cerr<<"cannot convert to decQuad from widechar "<<endl;
+   std::cerr<<"cannot convert to decQuad from widechar "<<std::endl;
 #endif
    
 }
