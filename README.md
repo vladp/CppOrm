@@ -32,6 +32,7 @@ Declare a database table as set of fields ONLY ONCE, and then automatically get
 Insert/Delete/Update  operations on tables/individual rows
 For example once you declare something like
 
+```cpp
 struct  tb_row
 {
   DECL_OTL_FIELD(1,OTL_BIGINT ,otl_var_bigint,otrq_prov_id,0)
@@ -49,8 +50,9 @@ The data type must satisfy two major properties:
 */
 
 };
+```
 
-(see the example/ex1)
+(see the trunk/example/ex1.cpp)
 
 you will not need to mention the field names again unless you want to access
 the data.  That means that if you want to add another field to your table, you
